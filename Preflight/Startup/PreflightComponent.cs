@@ -27,11 +27,14 @@ namespace Preflight.Startup
     {
         private readonly ISettingsService _settingsService;
         private readonly IContentChecker _contentChecker;
+        private readonly string _defaultCulture;
 
-        public PreflightComponent(ISettingsService settingsService, IContentChecker contentChecker)
+        public PreflightComponent(ILocalizationService localizationService, ISettingsService settingsService, IContentChecker contentChecker)
         {
             _settingsService = settingsService;
             _contentChecker = contentChecker;
+
+            _defaultCulture = localizationService.GetDefaultLanguageIsoCode();
         }
 
         public void Initialize()
@@ -51,13 +54,15 @@ namespace Preflight.Startup
 
         private void EditorModelEventManager_SendingContentModel(HttpActionExecutedContext sender, EditorModelEventArgs<ContentItemDisplay> e)
         {
-            // only interested in the default variant, for now
-            var variants = e.Model.Variants;
+            var removeContentApp = new List<bool>();
+            int idx = 0;
 
-            foreach (var variant in variants)
+            foreach (var variant in e.Model.Variants)
             {
+                removeContentApp.Add(false);
 
-                List<SettingsModel> settings = _settingsService.Get(variant.Language.IsoCode).Settings;
+                // get variant or default settings - will be default if only one culture is configured
+                List<SettingsModel> settings = _settingsService.Get(variant.Language?.IsoCode ?? _defaultCulture).Settings;
 
                 var groupSetting = settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.UserGroupOptIn, StringComparison.InvariantCultureIgnoreCase));
                 var testablePropsSetting = settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase));
@@ -84,9 +89,16 @@ namespace Preflight.Startup
 
                     if (!isTestable)
                     {
-                        e.Model.ContentApps = e.Model.ContentApps.Where(x => x.Name != KnownStrings.Name);
+                        removeContentApp[idx] = true;
                     }
                 }
+
+                idx += 1;
+            }
+
+            if (removeContentApp.All(x => x == true))
+            {
+                e.Model.ContentApps = e.Model.ContentApps.Where(x => x.Name != KnownStrings.Name);
             }
         }
 
@@ -105,7 +117,7 @@ namespace Preflight.Startup
                 { "ContentFailedChecks", KnownStrings.ContentFailedChecks },
                 { "PluginPath", $"{settings["appPluginsPath"]}/preflight/backoffice" },
                 { "PropertyTypesToCheck", KnownPropertyAlias.All },
-                { "ApiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings(null)) }
+                { "ApiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings()) }
             });
         }
 

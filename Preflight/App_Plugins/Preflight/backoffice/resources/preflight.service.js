@@ -21,13 +21,13 @@
             );
 
         const service = {
-            check: id => request('GET', `${urlBase}check/${id}`),            
+            check: (id, culture) => request('GET', `${urlBase}check/${id}/${culture || 'default'}`),            
 
             checkDirty: data => request('POST', `${urlBase}checkdirty/`, data),            
 
-            getSettings: culture => request('GET', `${urlBase}getSettings/${culture}`),            
+            getSettings: culture => request('GET', `${urlBase}getSettings/${culture || 'default'}`),            
 
-            getSettingValue: (culture, alias) => request('GET', `${urlBase}getSettingValue/${culture}/${alias}`),
+            getSettingValue: (culture, alias) => request('GET', `${urlBase}getSettingValue/${alias}/${culture || 'default'}`),
 
             saveSettings: (settings, tabs, culture) => request('POST', `${urlBase}saveSettings`, {
                 settings, 

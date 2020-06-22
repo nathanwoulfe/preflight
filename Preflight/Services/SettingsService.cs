@@ -22,14 +22,16 @@ namespace Preflight.Services
         private readonly ILogger _logger;
         private readonly IUserService _userService;
 
+        private readonly string _defaultCulture;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="logger"></param>
-        public SettingsService(ILogger logger, IUserService userService)
+        public SettingsService(ILogger logger, IUserService userService, ILocalizationService localizationService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+            _defaultCulture = localizationService.GetDefaultLanguageIsoCode() ?? throw new ArgumentNullException(nameof(localizationService));
         }
 
         /// <summary>
@@ -37,6 +39,8 @@ namespace Preflight.Services
         /// </summary>
         public PreflightSettings Get(string culture)
         {
+            culture = culture == "default" ? _defaultCulture : culture;
+
             if (HttpContext.Current.Request.IsLocal)
                 return GetSettings(culture);
 
@@ -57,6 +61,8 @@ namespace Preflight.Services
         /// </summary>
         public bool Save(PreflightSettings settings)
         {
+            settings.Culture = settings.Culture == "default" ? _defaultCulture : settings.Culture;
+
             try
             {
                 Current.AppCaches.RuntimeCache.InsertCacheItem(KnownStrings.SettingsCacheKey + settings.Culture, () => settings, new TimeSpan(24, 0, 0), false);

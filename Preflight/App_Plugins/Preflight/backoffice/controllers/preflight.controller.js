@@ -213,7 +213,8 @@
 
                     const payload = {
                         properties: dirtyProps,
-                        nodeId: editorState.current.id
+                        nodeId: editorState.current.id,
+                        culture: editorState.current.variants.find(x => x.active).culture
                     };
 
                     setBadgeCount(true);
@@ -280,9 +281,10 @@
                      * but needs to happen after the hub loads
                      */
                     $timeout(() => {
+                        console.log(editorState.current);
                         setBadgeCount(true);
                         checkDirty(); // builds initial hash array, but won't run anything
-                        preflightService.check(editorState.current.id);
+                        preflightService.check(editorState.current.id, editorState.current.variants.find(x => x.active).culture);
                     });
                 });
             });

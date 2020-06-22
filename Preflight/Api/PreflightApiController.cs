@@ -23,26 +23,22 @@ namespace Preflight.Api
             _contentChecker = contentChecker;
         }
 
-        [Route("foobar")]
-        public IHttpActionResult Get()
-        {
-            return Ok("foobar");
-        }
-
         /// <summary>
         /// Get Preflight settings object
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("getSettings/{culture}")]
-        public IHttpActionResult GetSettings(string culture)
+        [Route("getSettings")]
+        public IHttpActionResult GetSettings()
         {
+            var id = "en-US";
+
             try
             {
                 return Ok(new
                 {
                     status = HttpStatusCode.OK,
-                    data = _settingsService.Get(culture)
+                    data = _settingsService.Get(id)
                 });
             }
             catch (Exception ex)
@@ -56,8 +52,8 @@ namespace Preflight.Api
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("getSettingValue/{culture}/{id}")]
-        public IHttpActionResult GetSettingValue(string culture, string id)
+        [Route("getSettingValue/{id}/{culture}")]
+        public IHttpActionResult GetSettingValue(string id, string culture = "")
         {
             try
             {
@@ -105,7 +101,7 @@ namespace Preflight.Api
         /// <returns></returns>
         [HttpGet]
         [Route("check/{id}/{culture}")]
-        public IHttpActionResult Check(int id, string culture)
+        public IHttpActionResult Check(int id, string culture = "")
         {
             try
             {

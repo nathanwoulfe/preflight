@@ -28,6 +28,8 @@ namespace Preflight.Services
         private readonly ILogger _logger;
         private readonly IHubContext _hubContext;
 
+        private readonly string _defaultCulture;
+
         private int _id;
         private bool _fromSave;
         private List<SettingsModel> _settings;
@@ -35,7 +37,8 @@ namespace Preflight.Services
 
         private IEnumerable<IGridEditorConfig> _gridEditorConfig;
 
-        public ContentChecker(ISettingsService settingsService, IContentService contentService, IContentTypeService contentTypeService, ILogger logger)
+        public ContentChecker(ISettingsService settingsService, IContentService contentService, ILocalizationService localizationService,
+            IContentTypeService contentTypeService, ILogger logger)
         {
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _contentService = contentService ?? throw new ArgumentNullException(nameof(contentService));
@@ -43,6 +46,7 @@ namespace Preflight.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             _hubContext = GlobalHost.ConnectionManager.GetHubContext<PreflightHub>();
+            _defaultCulture = localizationService.GetDefaultLanguageIsoCode();
         }
 
         /// <summary>
@@ -50,6 +54,7 @@ namespace Preflight.Services
         /// </summary>
         private void Initialise(string culture)
         {
+            culture = culture == "default" ? _defaultCulture : culture;
             _settings = _settingsService.Get(culture).Settings;
             _testableProperties = _settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase))?.Value ?? "";
 
