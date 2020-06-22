@@ -5,8 +5,8 @@ namespace Preflight.Services.Interfaces
 {
     public interface IContentChecker
     {
-        bool CheckContent(int id, bool fromSave = false);
-        bool CheckContent(IContent content, bool fromSave = false);
+        bool CheckContent(int id, string culture, bool fromSave = false);
+        bool CheckContent(IContent content, string culture, bool fromSave = false);
 
         /// <summary>
         /// Checks set of property values and returns responses via signalr broadcast

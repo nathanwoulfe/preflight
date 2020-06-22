@@ -23,20 +23,26 @@ namespace Preflight.Api
             _contentChecker = contentChecker;
         }
 
+        [Route("foobar")]
+        public IHttpActionResult Get()
+        {
+            return Ok("foobar");
+        }
+
         /// <summary>
         /// Get Preflight settings object
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("getSettings")]
-        public IHttpActionResult GetSettings()
+        [Route("getSettings/{culture}")]
+        public IHttpActionResult GetSettings(string culture)
         {
             try
             {
                 return Ok(new
                 {
                     status = HttpStatusCode.OK,
-                    data = _settingsService.Get()
+                    data = _settingsService.Get(culture)
                 });
             }
             catch (Exception ex)
@@ -50,12 +56,12 @@ namespace Preflight.Api
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("getSettingValue/{id}")]
-        public IHttpActionResult GetSettingValue(string id)
+        [Route("getSettingValue/{culture}/{id}")]
+        public IHttpActionResult GetSettingValue(string culture, string id)
         {
             try
             {
-                List<SettingsModel> settings = _settingsService.Get().Settings;
+                List<SettingsModel> settings = _settingsService.Get(culture).Settings;
                 SettingsModel model = settings.First(s => s.Alias == id);
 
                 return Ok(new
@@ -98,15 +104,15 @@ namespace Preflight.Api
         /// <param name="id">Node id</param>
         /// <returns></returns>
         [HttpGet]
-        [Route("check/{id}")]
-        public IHttpActionResult Check(int id)
+        [Route("check/{id}/{culture}")]
+        public IHttpActionResult Check(int id, string culture)
         {
             try
             {
                 return Ok(new
                 {
                     status = HttpStatusCode.OK,
-                    failed = _contentChecker.CheckContent(id)
+                    failed = _contentChecker.CheckContent(id, culture)
                 });
             }
             catch (Exception ex)

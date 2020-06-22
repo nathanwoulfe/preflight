@@ -31,6 +31,6 @@ namespace Preflight.Constants
         public static readonly char[] WordDelimiters = { '.', '!', '?', ':', ';' };
         public static readonly string[] Endings = { "es", "ed" };
 
-        public static readonly string SettingsFilePath = HttpContext.Current.Server.MapPath("~/App_Plugins/Preflight/backoffice/settings.json");
+        public static readonly string SettingsFilePath = HttpContext.Current.Server.MapPath("~/App_Plugins/Preflight/backoffice/settings-{culture}.json");
     }
 }

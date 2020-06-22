@@ -302,7 +302,7 @@
     <None Include="app.config" />
     <None Include="App_Plugins\Preflight\dist.manifest" />
     <None Include="App_Plugins\Preflight\package.manifest" />
-    <None Include="App_Plugins\Preflight\backoffice\settings.json" />
+    <None Include="App_Plugins\Preflight\backoffice\settings-en-US.json" />
     <None Include="App_Plugins\Preflight\backoffice\css\styles.scss" />
     <None Include="package.json" />
     <None Include="packages.config" />

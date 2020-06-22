@@ -5,6 +5,11 @@
             <h3 class="bold">Preflight</h3>
             <p>Preflight provides a pluggable framework for adding pre-publishing checks to your content.</p>
             <p>Out of the box, Preflight provides plugins for general readability (reading level, sentence length, blacklisting words), link health and text autocorrect.</p>
+            <umb-control-group label="Culture" ng-if="vm.isVariant">
+                <select ng-model="vm.currentVariant" ng-options="v as v.name for v in vm.variants" name="Culture" ng-change="vm.getVariantSettings()">
+                    <option></option>
+                </select>
+            </umb-control-group>
         </umb-box-content>
     </umb-box>
     
@@ -28,9 +33,5 @@
         </button>
     </div>
     
-    <umb-overlay ng-if="vm.overlay.show"
-                 model="vm.overlay"
-                 view="vm.overlay.view"
-                 position="right">
-    </umb-overlay>
+    <umb-load-indicator ng-if="vm.loading"></umb-load-indicator>
 </div>

@@ -5,6 +5,7 @@ using Umbraco.Core.Composing;
 
 namespace Preflight.Startup
 {
+    [RuntimeLevel(MinLevel = RuntimeLevel.Run)]
     public class PreflightComposer : IUserComposer
     {
         public void Compose(Composition composition)

@@ -13,6 +13,9 @@ namespace Preflight.Models
 
         [JsonProperty("tabs")]
         public List<SettingsTab> Tabs { get; set; }
+
+        [JsonProperty("culture")]
+        public string Culture { get; set; }
     }
 
     public class SettingsTab

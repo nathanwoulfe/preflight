@@ -15,6 +15,7 @@ namespace Preflight.Models
     public class DirtyProperties
     {
         public int Id { get; set; }
+        public string Culture { get; set; }
         public List<SimpleProperty> Properties { get; set; }
     }
 }

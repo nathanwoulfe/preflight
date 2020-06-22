@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Web;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
 using Umbraco.Core.Logging;
@@ -34,12 +35,12 @@ namespace Preflight.Services
         /// <summary>
         /// Load the Preflight settings from the JSON file in app_plugins
         /// </summary>
-        public PreflightSettings Get()
+        public PreflightSettings Get(string culture)
         {
-            //if (IsDebug())
-                //return GetSettings();
+            if (HttpContext.Current.Request.IsLocal)
+                return GetSettings(culture);
 
-            PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey, () => GetSettings(), new TimeSpan(24, 0, 0), false);
+            PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey + culture, () => GetSettings(culture), new TimeSpan(24, 0, 0), false);
 
             if (fromCache != null)
             {
@@ -58,10 +59,10 @@ namespace Preflight.Services
         {
             try
             {
-                Current.AppCaches.RuntimeCache.InsertCacheItem(KnownStrings.SettingsCacheKey, () => settings, new TimeSpan(24, 0, 0), false);
+                Current.AppCaches.RuntimeCache.InsertCacheItem(KnownStrings.SettingsCacheKey + settings.Culture, () => settings, new TimeSpan(24, 0, 0), false);
 
                 // only persist the settings, tabs can be regenerated on startup
-                using (var file = new StreamWriter(KnownStrings.SettingsFilePath, false))
+                using (var file = new StreamWriter(KnownStrings.SettingsFilePath.Replace("{culture}", settings.Culture), false))
                 {
                     var serializer = new JsonSerializer();
                     serializer.Serialize(file, settings.Settings);
@@ -75,22 +76,14 @@ namespace Preflight.Services
             }
         }
 
-        private bool IsDebug()
-        {
-            #if DEBUG
-                return true;
-            #endif
-                return false;
-        }
-
-        private PreflightSettings GetSettings()
+        private PreflightSettings GetSettings(string culture)
         {
             // only get here when nothing is cached 
             List<SettingsModel> settings;
 
             // json initially stores the core checks only
             // once it has been saved in the backoffice, settings store all current plugins, with alias
-            using (var file = new StreamReader(KnownStrings.SettingsFilePath))
+            using (var file = new StreamReader(KnownStrings.SettingsFilePath.Replace("{culture}", culture)))
             {
                 string json = file.ReadToEnd();
                 settings = JsonConvert.DeserializeObject<List<SettingsModel>>(json);
@@ -175,6 +168,7 @@ namespace Preflight.Services
             // tabs are sorted alpha, with general first
             return new PreflightSettings
             {
+                Culture = culture,
                 Settings = settings.DistinctBy(s => (s.Tab, s.Label)).ToList(),
                 Tabs = tabs.GroupBy(x => x.Name)
                     .Select(y => y.First())

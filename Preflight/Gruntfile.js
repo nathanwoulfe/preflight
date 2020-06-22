@@ -146,10 +146,10 @@
         copy: {
             dev: {
                 expand: true,
-                cwd: '<%= backoffice %>/',
+                cwd: '<%= basePath %>/',
                 src: ['**/*'],
 //                src: ['**/*', '!settings.json'], // don't overwrite settings
-                dest: '../Preflight.site.v8/<%= backoffice %>/',
+                dest: '../Preflight.site.v8/<%= basePath %>/',
             },
 
             config: {

@@ -25,13 +25,14 @@
 
             checkDirty: data => request('POST', `${urlBase}checkdirty/`, data),            
 
-            getSettings: () => request('GET', `${urlBase}getSettings`),            
+            getSettings: culture => request('GET', `${urlBase}getSettings/${culture}`),            
 
-            getSettingValue: alias => request('GET', `${urlBase}getSettingValue/${alias}`),
+            getSettingValue: (culture, alias) => request('GET', `${urlBase}getSettingValue/${culture}/${alias}`),
 
-            saveSettings: (settings, tabs) => request('POST', `${urlBase}saveSettings`, {
-                settings: settings, 
-                tabs: tabs
+            saveSettings: (settings, tabs, culture) => request('POST', `${urlBase}saveSettings`, {
+                settings, 
+                tabs,
+                culture
             }),
 
             getHelpText: () => helpText

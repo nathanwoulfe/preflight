@@ -48,9 +48,9 @@ namespace Preflight.Services
         /// <summary>
         /// Intialise variables for this testing run
         /// </summary>
-        private void Initialise()
+        private void Initialise(string culture)
         {
-            _settings = _settingsService.Get().Settings;
+            _settings = _settingsService.Get(culture).Settings;
             _testableProperties = _settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase))?.Value ?? "";
 
             _gridEditorConfig = Current.Configs.Grids().EditorsConfig.Editors;
@@ -62,7 +62,7 @@ namespace Preflight.Services
         /// <param name="dirtyProperties"></param>
         public bool CheckDirty(DirtyProperties dirtyProperties)
         {
-            Initialise();
+            Initialise(dirtyProperties.Culture);
 
             _id = dirtyProperties.Id;
             var failed = false;
@@ -97,7 +97,7 @@ namespace Preflight.Services
         /// <param name="id"></param>
         /// <param name="fromSave"></param>
         /// <returns></returns>
-        public bool CheckContent(int id, bool fromSave) => CheckContent(_contentService.GetById(id), fromSave);
+        public bool CheckContent(int id, string culture, bool fromSave) => CheckContent(_contentService.GetById(id), culture, fromSave);
 
 
         /// <summary>
@@ -106,9 +106,9 @@ namespace Preflight.Services
         /// <param name="content"></param>
         /// <param name="fromSave"></param>
         /// <returns></returns>
-        public bool CheckContent(IContent content, bool fromSave)
+        public bool CheckContent(IContent content, string culture, bool fromSave)
         {
-            Initialise();
+            Initialise(culture);
 
             _fromSave = fromSave;
             var failed = false;
