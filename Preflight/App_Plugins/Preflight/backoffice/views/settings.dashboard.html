@@ -3,13 +3,20 @@
     <umb-box>
         <umb-box-content>
             <h3 class="bold">Preflight</h3>
-            <p>Preflight provides a pluggable framework for adding pre-publishing checks to your content.</p>
-            <p>Out of the box, Preflight provides plugins for general readability (reading level, sentence length, blacklisting words), link health and text autocorrect.</p>
-            <umb-control-group label="Culture" ng-if="vm.isVariant">
-                <select ng-model="vm.currentVariant" ng-options="v as v.name for v in vm.variants" name="Culture" ng-change="vm.getVariantSettings()">
-                    <option></option>
-                </select>
-            </umb-control-group>
+            <p>Preflight is a pluggable framework for adding pre-publishing checks to your content.</p>
+            <p>Out of the box, Preflight provides plugins for general readability (reading level, sentence length, naughty/nice words), link health and text autocorrect.</p>
+            <div class="form-horizontal" ng-if="vm.isVariant">
+                <div class="umb-control-group -last">
+                    <div class="control-header">
+                        <label class="control-label" for="culture">Culture</label>
+                    </div>
+                    <div class="controls">
+                        <select ng-model="vm.currentVariant" ng-options="v as v.name for v in vm.variants" name="culture" ng-change="vm.getVariantSettings()">
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </umb-box-content>
     </umb-box>
     

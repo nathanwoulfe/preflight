@@ -287,6 +287,12 @@ $umbBlue: #1b264f;
         }
     }
 
+    .umb-control-group.-last {
+        &::after {
+            display:none;
+        }
+    }
+
     .btn-help {
         background: 0;
         font-size: 20px;

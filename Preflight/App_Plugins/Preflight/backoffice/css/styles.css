@@ -195,6 +195,9 @@
   .preflight .umb-expansion-panel__header div span {
     font-weight: 400; }
 
+.preflight .umb-control-group.-last::after {
+  display: none; }
+
 .preflight .btn-help {
   background: 0;
   font-size: 20px;

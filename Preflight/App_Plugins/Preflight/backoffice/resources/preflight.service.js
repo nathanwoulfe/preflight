@@ -1,6 +1,6 @@
 ﻿(() => {
-
-    function preflightService($http, umbRequestHelper) {
+     
+    function preflightService($http, umbRequestHelper) { 
 
         const urlBase = Umbraco.Sys.ServerVariables.Preflight.ApiPath;
 
@@ -19,7 +19,7 @@
                 method === 'GET' ? $http.get(url) : $http.post(url, data),  
                 'Something broke'
             );
-
+         
         const service = {
             check: (id, culture) => request('GET', `${urlBase}check/${id}/${culture || 'default'}`),            
 
