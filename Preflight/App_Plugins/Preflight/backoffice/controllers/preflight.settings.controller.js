@@ -32,8 +32,11 @@
         this.getVariantSettings = () => {
             this.loading = true;
 
-            preflightService.getSettings(this.currentVariant.culture)
+            // fallback to true will return default culture settings for saving new language
+            preflightService.getSettings(this.currentVariant.culture, true)
                 .then(resp => {
+
+                    this.message = resp.data.message;
                     this.settings = resp.data.settings;
                     this.tabs = resp.data.tabs;
 

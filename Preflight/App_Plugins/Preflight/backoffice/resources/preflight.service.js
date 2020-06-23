@@ -16,7 +16,7 @@
 
         const request = (method, url, data) =>
             umbRequestHelper.resourcePromise(
-                method === 'GET' ? $http.get(url) : $http.post(url, data), 
+                method === 'GET' ? $http.get(url) : $http.post(url, data),  
                 'Something broke'
             );
 
@@ -25,14 +25,15 @@
 
             checkDirty: data => request('POST', `${urlBase}checkdirty/`, data),            
 
-            getSettings: culture => request('GET', `${urlBase}getSettings/${culture || 'default'}`),            
+            getSettings: (culture, fallback) => request('GET', `${urlBase}getSettings/1/${culture || 'default'}/${fallback}`),            
 
             getSettingValue: (culture, alias) => request('GET', `${urlBase}getSettingValue/${alias}/${culture || 'default'}`),
 
-            saveSettings: (settings, tabs, culture) => request('POST', `${urlBase}saveSettings`, {
+            saveSettings: (settings, tabs, culture, message = '') => request('POST', `${urlBase}saveSettings`, {
                 settings, 
                 tabs,
-                culture
+                culture,
+                message
             }),
 
             getHelpText: () => helpText

@@ -66,13 +66,20 @@
 
         /**
          * 
-         * @param {any} editor
          */
-        const onComplete = () => {
+        const onComplete = () => { 
+
             // it's possible no tests ran, in which case results won't exist
             this.noTests = this.results.properties.every(x => !x.plugins.length);
             if (this.noTests) {
                 $scope.model.badge = undefined;
+            }
+
+            // if no tests and a message has been return, show an alert icon
+            if (!this.results.properties.length && this.message) {
+                $scope.model.badge = {
+                    type: 'alert icon-'
+                };
             }
 
             for (let p of this.results.properties) {
@@ -101,7 +108,13 @@
                 return;
             }
 
-            if (this.results && this.results.failedCount > 0) {
+            // if no tests and a message has been return, show an alert icon
+            if (!this.results.properties.length && this.message) {
+                $scope.model.badge = {
+                    type: 'danger icon-'
+                };
+            }
+            else if (this.results && this.results.failedCount > 0) {
                 $scope.model.badge = {
                     count: this.results.failedCount,
                     type: 'alert'
@@ -259,10 +272,20 @@
         });
 
         /**
+         * Manage cases where the check fails - ie settings do not exist for the current variant 
+         * @param {any} data
+         */
+        const validateCheckResponse = data => {
+            if (data.message && data.status === 200) {
+                this.message = data.message;                
+            }
+        };
+
+        /**
          * Initiates the signalr hub for returning test results
          */
         const initSignarlR = () => {
-
+             
             preflightHub.initHub(hub => {
 
                 hub.on('preflightTest',
@@ -281,10 +304,10 @@
                      * but needs to happen after the hub loads
                      */
                     $timeout(() => {
-                        console.log(editorState.current);
                         setBadgeCount(true);
                         checkDirty(); // builds initial hash array, but won't run anything
-                        preflightService.check(editorState.current.id, editorState.current.variants.find(x => x.active).culture);
+                        preflightService.check(editorState.current.id, editorState.current.variants.find(x => x.active).language.culture)
+                            .then(resp => validateCheckResponse(resp));
                     });
                 });
             });

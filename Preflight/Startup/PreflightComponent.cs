@@ -6,7 +6,6 @@ using Preflight.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Filters;
@@ -64,6 +63,9 @@ namespace Preflight.Startup
                 // get variant or default settings - will be default if only one culture is configured
                 List<SettingsModel> settings = _settingsService.Get(variant.Language?.IsoCode ?? _defaultCulture).Settings;
 
+                if (settings == null || !settings.Any())
+                    continue;
+                
                 var groupSetting = settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.UserGroupOptIn, StringComparison.InvariantCultureIgnoreCase));
                 var testablePropsSetting = settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase));
 
@@ -117,7 +119,7 @@ namespace Preflight.Startup
                 { "ContentFailedChecks", KnownStrings.ContentFailedChecks },
                 { "PluginPath", $"{settings["appPluginsPath"]}/preflight/backoffice" },
                 { "PropertyTypesToCheck", KnownPropertyAlias.All },
-                { "ApiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings()) }
+                { "ApiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings(1, "en-US", false)) }
             });
         }
 
@@ -152,7 +154,8 @@ namespace Preflight.Startup
             IContent content = e.SavedEntities.First();
 
             // TODO => this should be culture aware
-            bool failed = _contentChecker.CheckContent(content, null, true);
+            // message should always be empty, since there must be settings if we're running tests
+            string message = _contentChecker.CheckContent(content, null, true, out bool failed);
 
             // at least one property on the current document fails the preflight check
             if (!failed) return;

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Lucene.Net.Search;
+using Newtonsoft.Json;
 using Preflight.Constants;
 using Preflight.Extensions;
 using Preflight.Models;
@@ -21,6 +22,7 @@ namespace Preflight.Services
     {
         private readonly ILogger _logger;
         private readonly IUserService _userService;
+        private readonly ILocalizationService _localizationService;
 
         private readonly string _defaultCulture;
         /// <summary>
@@ -31,29 +33,32 @@ namespace Preflight.Services
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
-            _defaultCulture = localizationService.GetDefaultLanguageIsoCode() ?? throw new ArgumentNullException(nameof(localizationService));
+            _localizationService = localizationService ?? throw new ArgumentNullException(nameof(localizationService));
+
+            _defaultCulture = localizationService.GetDefaultLanguageIsoCode();
         }
 
         /// <summary>
         /// Load the Preflight settings from the JSON file in app_plugins
         /// </summary>
-        public PreflightSettings Get(string culture)
+        public PreflightSettings Get(string culture, bool fallbackToDefault)
         {
             culture = culture == "default" ? _defaultCulture : culture;
 
+            // no caching for testing/dev
             if (HttpContext.Current.Request.IsLocal)
-                return GetSettings(culture);
+                return GetSettings(culture, fallbackToDefault);
 
-            PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey + culture, () => GetSettings(culture), new TimeSpan(24, 0, 0), false);
+            PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey + culture, () => GetSettings(culture, fallbackToDefault), new TimeSpan(24, 0, 0), false);
 
             if (fromCache != null)
             {
                 return fromCache;
             }
 
-            _logger.Error<SettingsService>(new NullReferenceException("Could not get Preflight settings"));
+            _logger.Error<SettingsService>(new NullReferenceException($"Could not get Preflight settings for culture: {culture}"));
 
-            return null;
+            return default;
         }
 
         /// <summary>
@@ -77,19 +82,46 @@ namespace Preflight.Services
             }
             catch (Exception ex)
             {
-                _logger.Error<SettingsService>(ex, "Could not save Preflight settings");
+                _logger.Error<SettingsService>(ex, "$Could not save Preflight settings for culture: {culture}");
                 return false;
             }
         }
 
-        private PreflightSettings GetSettings(string culture)
+        private PreflightSettings GetSettings(string culture, bool fallbackToDefault)
         {
             // only get here when nothing is cached 
             List<SettingsModel> settings;
+            var resp = new PreflightSettings();
+            string settingsPath = KnownStrings.SettingsFilePath.Replace("{culture}", culture);
+
+            // if no settings file exists for the culture
+            // check for a fallback otherwise return a UI message
+            if (!File.Exists(settingsPath))
+            {
+                var lang = _localizationService.GetLanguageByIsoCode(culture);
+
+                if (!lang.FallbackLanguageId.HasValue)
+                {
+                    resp.Culture = culture;
+                    resp.Message = $"No settings exist for culture: {lang.CultureName}";
+
+                    if (!fallbackToDefault)
+                    {
+                        return resp;
+                    }
+                }
+
+                if (fallbackToDefault)
+                {
+                    culture = fallbackToDefault ? _defaultCulture : _localizationService.GetLanguageIsoCodeById(lang.FallbackLanguageId.Value);
+                }              
+
+                settingsPath = KnownStrings.SettingsFilePath.Replace("{culture}", culture);
+            }
 
             // json initially stores the core checks only
             // once it has been saved in the backoffice, settings store all current plugins, with alias
-            using (var file = new StreamReader(KnownStrings.SettingsFilePath.Replace("{culture}", culture)))
+            using (var file = new StreamReader(settingsPath))
             {
                 string json = file.ReadToEnd();
                 settings = JsonConvert.DeserializeObject<List<SettingsModel>>(json);
@@ -172,15 +204,15 @@ namespace Preflight.Services
             }
 
             // tabs are sorted alpha, with general first
-            return new PreflightSettings
-            {
-                Culture = culture,
-                Settings = settings.DistinctBy(s => (s.Tab, s.Label)).ToList(),
-                Tabs = tabs.GroupBy(x => x.Name)
+            resp.Settings = settings.DistinctBy(s => (s.Tab, s.Label)).ToList();
+            resp.Tabs = tabs.GroupBy(x => x.Name)
                     .Select(y => y.First())
                     .OrderBy(i => i.Name != SettingsTabNames.General)
-                    .ThenBy(i => i.Name).ToList()
-            };
+                    .ThenBy(i => i.Name).ToList();
+
+            resp.Culture = resp.Culture ?? culture;
+
+            return resp;
         }
     }
 }

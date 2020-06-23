@@ -5,6 +5,11 @@
     [data-element="sub-view-preflight"] .badge.-type-success::before {
       transform: translateY(-2px);
       content: '\e165'; }
+  [data-element="sub-view-preflight"] .badge.-type-danger {
+    background-color: #d42054; }
+    [data-element="sub-view-preflight"] .badge.-type-danger::before {
+      transform: translateY(-2px);
+      content: '\e1a4'; }
 
 .preflight-progress {
   margin: 15px auto 30px; }

@@ -16,6 +16,9 @@ namespace Preflight.Models
 
         [JsonProperty("culture")]
         public string Culture { get; set; }
+
+        [JsonProperty("message")]
+        public string Message { get; set; }
     }
 
     public class SettingsTab

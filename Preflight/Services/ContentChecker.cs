@@ -52,13 +52,23 @@ namespace Preflight.Services
         /// <summary>
         /// Intialise variables for this testing run
         /// </summary>
-        private void Initialise(string culture)
+        private string Initialise(string culture, out string realCulture)
         {
-            culture = culture == "default" ? _defaultCulture : culture;
-            _settings = _settingsService.Get(culture).Settings;
-            _testableProperties = _settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase))?.Value ?? "";
+            realCulture = culture == "default" ? _defaultCulture : culture;
+            var settings = _settingsService.Get(realCulture);
+
+            if (settings.Settings != null && settings.Settings.Any())
+            {
+                _settings = settings.Settings;
+                _testableProperties = _settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase))?.Value ?? "";
+            } else
+            {
+                return settings.Message;
+            }
 
             _gridEditorConfig = Current.Configs.Grids().EditorsConfig.Editors;
+
+            return string.Empty;
         }
 
         /// <summary>
@@ -67,7 +77,7 @@ namespace Preflight.Services
         /// <param name="dirtyProperties"></param>
         public bool CheckDirty(DirtyProperties dirtyProperties)
         {
-            Initialise(dirtyProperties.Culture);
+            Initialise(dirtyProperties.Culture, out string culture);
 
             _id = dirtyProperties.Id;
             var failed = false;
@@ -102,7 +112,12 @@ namespace Preflight.Services
         /// <param name="id"></param>
         /// <param name="fromSave"></param>
         /// <returns></returns>
-        public bool CheckContent(int id, string culture, bool fromSave) => CheckContent(_contentService.GetById(id), culture, fromSave);
+        public string CheckContent(int id, string culture, bool fromSave, out bool failed) {
+            var message = CheckContent(_contentService.GetById(id), culture, fromSave, out bool innerFailed);
+            failed = innerFailed;
+
+            return message;
+        }
 
 
         /// <summary>
@@ -111,18 +126,26 @@ namespace Preflight.Services
         /// <param name="content"></param>
         /// <param name="fromSave"></param>
         /// <returns></returns>
-        public bool CheckContent(IContent content, string culture, bool fromSave)
+        public string CheckContent(IContent content, string culture, bool fromSave, out bool failed)
         {
-            Initialise(culture);
+            var message = Initialise(culture, out culture);
 
             _fromSave = fromSave;
-            var failed = false;
+            failed = false;
+
+            if (message.HasValue())
+            {
+                failed = true;
+                _hubContext.Clients.All.PreflightComplete();
+
+                return message;
+            }
 
             IEnumerable<Property> props = content.GetPreflightProperties();
 
             foreach (Property prop in props)
             {
-                string propValue = prop.GetValue()?.ToString();
+                string propValue = prop.GetValue(culture)?.ToString();
 
                 // only continue if the prop has a value
                 if (!propValue.HasValue())
@@ -141,7 +164,7 @@ namespace Preflight.Services
 
             _hubContext.Clients.All.PreflightComplete();
 
-            return failed;
+            return string.Empty;
         }
 
 

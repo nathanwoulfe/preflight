@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Web.Helpers;
 using System.Web.Http;
 using Umbraco.Web.Mvc;
 using Umbraco.Web.WebApi;
@@ -22,23 +23,28 @@ namespace Preflight.Api
             _settingsService = settingsService;
             _contentChecker = contentChecker;
         }
+        
+        [HttpGet]
+        [Route("test")]
+        public IHttpActionResult Test()
+        {
+            return Json("OK");
+        }
 
         /// <summary>
         /// Get Preflight settings object
         /// </summary>
         /// <returns></returns>
         [HttpGet]
-        [Route("getSettings")]
-        public IHttpActionResult GetSettings()
+        [Route("getSettings/{id}/{culture}/{fallback:bool}")]
+        public IHttpActionResult GetSettings(int id, string culture, bool fallback = false)
         {
-            var id = "en-US";
-
             try
             {
                 return Ok(new
                 {
                     status = HttpStatusCode.OK,
-                    data = _settingsService.Get(id)
+                    data = _settingsService.Get(culture, fallback)
                 });
             }
             catch (Exception ex)
@@ -77,7 +83,6 @@ namespace Preflight.Api
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        [Route("saveSettings")]
         public IHttpActionResult SaveSettings(PreflightSettings settings)
         {
             try
@@ -105,10 +110,13 @@ namespace Preflight.Api
         {
             try
             {
+                var message = _contentChecker.CheckContent(id, culture, false, out bool failed);
+
                 return Ok(new
                 {
                     status = HttpStatusCode.OK,
-                    failed = _contentChecker.CheckContent(id, culture)
+                    message,
+                    failed
                 });
             }
             catch (Exception ex)

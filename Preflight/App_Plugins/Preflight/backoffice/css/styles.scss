@@ -18,6 +18,15 @@ $umbBlue: #1b264f;
             content: '\e165';
         }
     }
+
+    &.-type-danger {
+        background-color:$red;
+
+        &::before {
+            transform: translateY(-2px);
+            content: '\e1a4';
+        }
+    }
 }
 
 .preflight-progress {

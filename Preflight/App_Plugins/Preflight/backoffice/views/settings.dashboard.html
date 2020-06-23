@@ -13,7 +13,11 @@
         </umb-box-content>
     </umb-box>
     
-    <div class="form-horizontal">
+    <div ng-if="vm.message && !vm.loading" class="alert alert-info">
+        No settings exist for culture: {{ vm.currentVariant.name }}. The settings displayed are copied from the default culture, but will be saved as {{ vm.currentVariant.name }}.
+    </div>
+
+    <div class="form-horizontal" ng-if="!vm.error && vm.tabs">
         <div class="umb-expansion-panel" ng-repeat="tab in vm.tabs">
             <div class="umb-expansion-panel__header" ng-click="tab.open = !tab.open">
                 <div>{{ ::tab.name }} <span ng-if="tab.summary">{{ ' - ' + tab.summary }}</span></div>
