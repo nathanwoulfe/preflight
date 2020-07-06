@@ -7,30 +7,56 @@
             '/umbraco/backoffice/signalr/hubs'
         ];
 
-        function initHub(callback) {
-            if ($.connection === undefined) {
-                const promises = [];
-                scripts.forEach(script =>
-                    promises.push(assetsService.loadJs(script)));
+        let starting = false;
+        let callbacks = [];
 
-                $q.all(promises)
-                    .then(() => hubSetup(callback));
-                    
-            } else {
-                hubSetup(callback);
+        function initHub(callback) {
+            callbacks.push(callback);
+            if (!starting) {
+                if ($.connection === undefined) {
+                    starting = true;
+
+                    const promises = [];
+                    scripts.forEach(script =>
+                        promises.push(assetsService.loadJs(script)));
+
+                    $q.all(promises)
+                        .then(() => processCallbacks());
+
+                } else {
+                    processCallbacks();
+                    starting = false;
+                }
             }
         }
 
-        function hubSetup(callback) {
+        function processCallbacks() {
+            while (callbacks.length) {
+                const cb = callbacks.pop();
+                setupHub(cb);
+            }
+        }
+
+        function stopHub() {
+            starting = false;
+            callbacks = [];
+            $.connection.hub.stop(true, true);
+        }
+
+        function setupHub(callback) {
 
             const proxy = $.connection.preflightHub;
 
             const hub = {
                 start: callback => {
-                    $.connection.hub.start();
-                    if (callback) {
-                        callback();
+                    if ($.connection.hub.state !== $.connection.connectionState.disconnected) {
+                        $.connection.hub.stop(true, true);
                     }
+                    $.connection.hub.start().done(() => {
+                        if (callback) {
+                            callback();
+                        }
+                    })
                 },
                 on: (eventName, callback) => {
                     proxy.on(eventName, 
@@ -58,7 +84,8 @@
         }
 
         return {
-            initHub: initHub
+            initHub: initHub,
+            stopHub: stopHub
         };
     }
 

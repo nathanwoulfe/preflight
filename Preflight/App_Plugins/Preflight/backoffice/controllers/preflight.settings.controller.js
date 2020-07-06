@@ -5,18 +5,18 @@
         this.isVariant = false;
 
         const watchTestableProperties = () => {
-            let propertiesToModify = this.settings.filter(x => x.alias.indexOf('PropertiesToTest') !== -1 && x.alias !== 'propertiesToTest');
+            let propertiesToModify = this.settings.filter(x => x.alias.includes('PropertiesToTest') && x.alias !== 'propertiesToTest');
             $scope.$watch(() => this.settings.find(x => x.alias === 'propertiesToTest').value, newVal => {
                 if (newVal) {
                     for (let prop of propertiesToModify) {
                         // use the prop alias to find the checkbox set
                         for (let checkbox of document.querySelectorAll(`umb-checkbox[name*="${prop.alias}"]`)) {
-                            checkbox.querySelector('.umb-form-check').classList[newVal.indexOf(checkbox.getAttribute('value')) === -1 ? 'add' : 'remove']('pf-disabled');
+                            checkbox.querySelector('.umb-form-check').classList[!newVal.includes(checkbox.getAttribute('value')) ? 'add' : 'remove']('pf-disabled');
                         }
                     }
                 }
             }, true);
-        };
+        }; 
 
         languageResource.getAll()
             .then(resp => {
@@ -41,7 +41,7 @@
                     this.tabs = resp.data.tabs;
 
                     this.settings.forEach(v => {
-                        if (v.view.indexOf('slider') !== -1) {
+                        if (v.view.includes('slider')) {
                             v.config = {
                                 handle: 'round',
                                 initVal1: v.alias === 'longWordSyllables' ? 5 : 65,
@@ -52,7 +52,7 @@
                                 tooltip: 'always',
                                 tooltipPosition: 'bottom',
                             };
-                        } else if (v.view.indexOf('multipletextbox') !== -1) {
+                        } else if (v.view.includes('multipletextbox')) {
 
                             v.value = v.value.split(',').map(val => {
                                 return { value: val };
@@ -64,7 +64,7 @@
                             };
 
                             v.validation = {};
-                        } else if (v.view.indexOf('checkboxlist') !== -1) {
+                        } else if (v.view.includes('checkboxlist')) {
 
                             v.value = v.value.split(',');
 
@@ -86,8 +86,8 @@
          */
         this.saveSettings = () => {
 
-            const min = parseInt(this.settings.filter(x => x.alias === 'readabilityTargetMinimum')[0].value);
-            const max = parseInt(this.settings.filter(x => x.alias === 'readabilityTargetMaximum')[0].value);
+            const min = parseInt(this.settings.find(x => x.alias === 'readabilityTargetMinimum').value);
+            const max = parseInt(this.settings.find(x => x.alias === 'readabilityTargetMaximum').value);
 
             if (min < max) {
 
@@ -100,9 +100,9 @@
                 const settingsToSave = JSON.parse(JSON.stringify(this.settings));
 
                 settingsToSave.forEach(v => {
-                    if (v.view.indexOf('multipletextbox') !== -1) {
+                    if (v.view.includes('multipletextbox')) {
                         v.value = v.value.map(o => o.value).join(',');
-                    } else if (v.view.indexOf('checkboxlist') !== -1) {
+                    } else if (v.view.includes('checkboxlist')) {
                         v.value = v.value.join(',');
                     }
                 });

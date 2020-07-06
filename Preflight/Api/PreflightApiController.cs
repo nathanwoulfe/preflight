@@ -23,13 +23,6 @@ namespace Preflight.Api
             _settingsService = settingsService;
             _contentChecker = contentChecker;
         }
-        
-        [HttpGet]
-        [Route("test")]
-        public IHttpActionResult Test()
-        {
-            return Json("OK");
-        }
 
         /// <summary>
         /// Get Preflight settings object
@@ -130,7 +123,6 @@ namespace Preflight.Api
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        [Route("checkdirty")]
         public IHttpActionResult CheckDirty(DirtyProperties data)
         {
             try
@@ -139,6 +131,26 @@ namespace Preflight.Api
                 {
                     status = HttpStatusCode.OK,
                     failed = _contentChecker.CheckDirty(data)
+                });
+            }
+            catch (Exception ex)
+            {
+                return Error(ex.Message);
+            }
+        }
+
+        [HttpGet]
+        [Route("getpropertiesforcurrent/{id}/{culture}/{alias}")]
+        public IHttpActionResult GetPropertiesForCurrent(int id, string culture, string alias)
+        {
+            try
+            {
+                var properties = _settingsService.GetPropertiesForCurrent(culture, alias);
+
+                return Ok(new
+                {
+                    status = HttpStatusCode.OK,
+                    properties
                 });
             }
             catch (Exception ex)

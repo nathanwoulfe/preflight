@@ -60,10 +60,15 @@ namespace Preflight.Services
             if (settings.Settings != null && settings.Settings.Any())
             {
                 _settings = settings.Settings;
-                _testableProperties = _settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.PropertiesToTest, StringComparison.InvariantCultureIgnoreCase))?.Value ?? "";
+                _testableProperties = _settings.GetValue<string>(KnownSettings.PropertiesToTest);
             } else
             {
                 return settings.Message;
+            }
+
+            if (_settings.GetValue<bool>(KnownSettings.DisableAllTests))
+            {
+                return "Preflight is currently disabled - enable it in Settings";
             }
 
             _gridEditorConfig = Current.Configs.Grids().EditorsConfig.Editors;
@@ -97,7 +102,7 @@ namespace Preflight.Services
                     continue;
                 }
 
-                failed = TestAndBroadcast(prop.Name, propValue, prop.Editor) || failed;
+                failed = TestAndBroadcast(prop.Name, propValue, prop.Editor, culture) || failed;
             }
 
             _hubContext.Clients.All.PreflightComplete();
@@ -159,7 +164,7 @@ namespace Preflight.Services
                     continue;
                 }
 
-                failed = TestAndBroadcast(prop.PropertyType.Name, propValue, prop.PropertyType.PropertyEditorAlias) || failed;
+                failed = TestAndBroadcast(prop.PropertyType.Name, propValue, prop.PropertyType.PropertyEditorAlias, culture) || failed;
             }
 
             _hubContext.Clients.All.PreflightComplete();
@@ -175,7 +180,7 @@ namespace Preflight.Services
         /// <param name="value"></param>
         /// <param name="alias"></param>
         /// <returns></returns>
-        private bool TestAndBroadcast(string name, string value, string alias)
+        private bool TestAndBroadcast(string name, string value, string alias, string culture)
         {
             List<PreflightPropertyResponseModel> testResult = new List<PreflightPropertyResponseModel>();
 
@@ -206,6 +211,9 @@ namespace Preflight.Services
                     {
                         failed = true;
                     }
+
+                    // check this client-side to ensure correct variant receives the result
+                    result.Culture = culture;
 
                     // announce the result
                     _hubContext.Clients.All.PreflightTest(result);

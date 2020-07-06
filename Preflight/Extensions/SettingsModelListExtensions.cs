@@ -14,7 +14,7 @@ namespace Preflight.Extensions
 
         public static T GetValue<T>(this IEnumerable<SettingsModel> settings, string name) where T : IConvertible
         {
-            object value = settings.First(s => s.Alias == name.Camel())?.Value;
+            object value = settings.FirstOrDefault(s => s.Alias == name.Camel())?.Value;
 
             // why? because settings are stored as strings, and a string won't convert to bool
             if (typeof(T) == typeof(bool))
@@ -22,7 +22,7 @@ namespace Preflight.Extensions
                 value = Convert.ToInt32(value);
             }
 
-            return value == null ? default(T) : (T)Convert.ChangeType(value, typeof(T));
+            return value == null ? default : (T)Convert.ChangeType(value, typeof(T));
         }
     }
 }

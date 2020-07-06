@@ -22,23 +22,23 @@
         };
 
         return {
-            request: request => {
-                if (request.url.toLowerCase().indexOf(postSaveUrl) !== -1) {
-                    $injector.invoke(['preflightService', s => {
-                        s.getSettings()
-                            .then(resp => {                   
-                                const settings = resp.data.settings;
-                                const runOnSave = settings.find(x => x.alias === 'runPreflightOnSave'); 
-                                if (runOnSave && runOnSave.value === '1') {
-                                    const userGroupOptInOut = settings.find(x => x.alias === 'userGroupOptInOut');
-                                    checkGroup(userGroupOptInOut);
-                                }
-                            });
-                    }]);
-                }
+            //request: request => {
+            //    if (request.url.toLowerCase().indexOf(postSaveUrl) !== -1) {
+            //        $injector.invoke(['preflightService', s => {
+            //            s.getSettings()
+            //                .then(resp => {                   
+            //                    const settings = resp.data.settings;
+            //                    const runOnSave = settings.find(x => x.alias === 'runPreflightOnSave'); 
+            //                    if (runOnSave && runOnSave.value === '1') {
+            //                        const userGroupOptInOut = settings.find(x => x.alias === 'userGroupOptInOut');
+            //                        checkGroup(userGroupOptInOut);
+            //                    }
+            //                });
+            //        }]);
+            //    }
 
-                return request || $q.when(request);
-            },
+            //    return request || $q.when(request);
+            //},
             response: response => {
                 try {
                     if (response.config.url.toLowerCase().indexOf(postSaveUrl) !== -1) {

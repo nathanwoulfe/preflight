@@ -1,4 +1,5 @@
-﻿using Lucene.Net.Search;
+﻿using Lucene.Net.Documents;
+using Lucene.Net.Search;
 using Newtonsoft.Json;
 using Preflight.Constants;
 using Preflight.Extensions;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Web;
 using Umbraco.Core;
 using Umbraco.Core.Cache;
@@ -46,8 +48,8 @@ namespace Preflight.Services
             culture = culture == "default" ? _defaultCulture : culture;
 
             // no caching for testing/dev
-            if (HttpContext.Current.Request.IsLocal)
-                return GetSettings(culture, fallbackToDefault);
+            //if (HttpContext.Current.Request.IsLocal)
+            //    return GetSettings(culture, fallbackToDefault);
 
             PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey + culture, () => GetSettings(culture, fallbackToDefault), new TimeSpan(24, 0, 0), false);
 
@@ -59,6 +61,18 @@ namespace Preflight.Services
             _logger.Error<SettingsService>(new NullReferenceException($"Could not get Preflight settings for culture: {culture}"));
 
             return default;
+        }
+
+        public List<string> GetPropertiesForCurrent(string culture, string alias)
+        {
+            var settings = GetSettings(culture, false).Settings;
+            var documentTypesToTest = settings.GetValue<string>(KnownSettings.DocumentTypesToTest);
+
+            // if current alias is not listed in types to test, do nothing
+            if (documentTypesToTest.HasValue() && !documentTypesToTest.Contains(alias) || settings.GetValue<bool>(KnownSettings.DisableAllTests))
+                return new List<string>();
+
+            return settings.GetValue<string>(KnownSettings.PropertiesToTest)?.Split(',').ToList() ?? default;
         }
 
         /// <summary>

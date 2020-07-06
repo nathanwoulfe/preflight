@@ -30,6 +30,9 @@ namespace Preflight.Models
         [JsonProperty("remove")]
         public bool Remove { get; set; }
 
+        [JsonProperty("culture")]
+        public string Culture { get; set; }
+
         public PreflightPropertyResponseModel()
         {
             Open = false;

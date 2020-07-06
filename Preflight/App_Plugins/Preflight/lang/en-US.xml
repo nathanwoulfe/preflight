@@ -10,8 +10,8 @@
     <key alias="failIntro">That's not great...</key>
     <key alias="failTextSingular">Content on this page fails one preflight check</key>
     <key alias="failTextPlural">Content on this page fails multiple preflight checks</key>
-    <key alias="noTestsIntro">No content on this page underwent preflight checks</key>
-    <key alias="noTestsText">Ensure the Preflight settings are including the appropriate property types</key>
+    <key alias="noTestsIntro">Nothing to test...</key>
+    <key alias="noTestsText">Maybe there's no content, perhaps there are no tests configured</key>
 
     <key alias="runningChecks">Preflight found modified content - testing</key>
 

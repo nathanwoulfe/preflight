@@ -56,6 +56,12 @@ namespace Preflight.Startup
             var removeContentApp = new List<bool>();
             int idx = 0;
 
+            if (e.Model.Id == 0)
+            {
+                e.Model.ContentApps = e.Model.ContentApps.Where(x => x.Name != KnownStrings.Name);
+                return;
+            }
+
             foreach (var variant in e.Model.Variants)
             {
                 removeContentApp.Add(false);
@@ -109,17 +115,17 @@ namespace Preflight.Startup
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="dictionary"></param>
-        private static void ServerVariablesParser_Parsing(object sender, Dictionary<string, object> dictionary)
+        private void ServerVariablesParser_Parsing(object sender, Dictionary<string, object> dictionary)
         {
             var urlHelper = new System.Web.Mvc.UrlHelper(new RequestContext(new HttpContextWrapper(HttpContext.Current), new RouteData()));
             IDictionary<string, object> settings = dictionary["umbracoSettings"].ToDictionary();
 
             dictionary.Add("Preflight", new Dictionary<string, object>
             {
-                { "ContentFailedChecks", KnownStrings.ContentFailedChecks },
-                { "PluginPath", $"{settings["appPluginsPath"]}/preflight/backoffice" },
-                { "PropertyTypesToCheck", KnownPropertyAlias.All },
-                { "ApiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings(1, "en-US", false)) }
+                { "contentFailedChecks", KnownStrings.ContentFailedChecks },
+                { "pluginPath", $"{settings["appPluginsPath"]}/preflight/backoffice" },
+                { "apiPath", urlHelper.GetUmbracoApiServiceBaseUrl<Api.ApiController>(controller => controller.GetSettings(1, "en-US", false)) },
+                { "defaultCulture", _defaultCulture }
             });
         }
 
@@ -131,43 +137,52 @@ namespace Preflight.Startup
         private void ContentService_Saving(IContentService sender, SaveEventArgs<IContent> e)
         {
             // TODO => this should be culture-aware
-            List<SettingsModel> settings = _settingsService.Get(null).Settings;
-
-            // only check if current user group is opted in to testing on save
-            var groupSetting = settings.FirstOrDefault(x => string.Equals(x.Label, KnownSettings.UserGroupOptIn, StringComparison.InvariantCultureIgnoreCase));
-            if (groupSetting != null && groupSetting.Value.HasValue())
-            {
-                var currentUserGroups = Umbraco.Web.Composing.Current.UmbracoContext.Security.CurrentUser?.Groups?.Select(x => x.Name) ?? new List<string>();
-                if (currentUserGroups.Any())
-                {
-                    bool testOnSave = groupSetting.Value.Split(',').Intersect(currentUserGroups).Any();
-
-                    if (!testOnSave)
-                        return;
-                }
-            }
-
-            if (!settings.GetValue<bool>(KnownSettings.BindSaveHandler)) return;
-
-            var cancelSaveOnFail = settings.GetValue<bool>(KnownSettings.CancelSaveOnFail);
-
             IContent content = e.SavedEntities.First();
+            var culturesToSave = content.CultureInfos.Values.Where(x => x.IsDirty());
 
-            // TODO => this should be culture aware
-            // message should always be empty, since there must be settings if we're running tests
-            string message = _contentChecker.CheckContent(content, null, true, out bool failed);
-
-            // at least one property on the current document fails the preflight check
-            if (!failed) return;
-
-            // these values are retrieved in the notifications handler, and passed down to the client
-            HttpContext.Current.Items["PreflightFailed"] = true;
-            HttpContext.Current.Items["PreflightCancelSaveOnFail"] = cancelSaveOnFail;
-            HttpContext.Current.Items["PreflightNodeId"] = content.Id;
-
-            if (e.CanCancel && cancelSaveOnFail)
+            foreach (ContentCultureInfos cultureInfo in culturesToSave)
             {
-                e.CancelOperation(new EventMessage("PreflightFailed", content.Id.ToString()));
+                var culture = cultureInfo.Culture;
+                List<SettingsModel> settings = _settingsService.Get(culture).Settings;
+
+                if (settings.GetValue<bool>(KnownSettings.DisableAllTests))
+                    continue;
+
+                if (!settings.GetValue<bool>(KnownSettings.BindSaveHandler))
+                    continue;
+
+                // only check if current user group is opted in to testing on save
+                var groupSetting = settings.GetValue<string>(KnownSettings.UserGroupOptIn);
+                if (groupSetting != null)
+                {
+                    var currentUserGroups = Umbraco.Web.Composing.Current.UmbracoContext.Security.CurrentUser?.Groups?.Select(x => x.Name) ?? new List<string>();
+                    if (currentUserGroups.Any())
+                    {
+                        bool testOnSave = groupSetting.Split(',').Intersect(currentUserGroups).Any();
+
+                        if (!testOnSave)
+                            continue;
+                    }
+                }
+
+                // message should always be empty, since there must be settings if we're running tests
+                _ = _contentChecker.CheckContent(content, culture, true, out bool failed);
+
+                // at least one property on the current document fails the preflight check
+                if (!failed) continue;
+
+                var cancelSaveOnFail = settings.GetValue<bool>(KnownSettings.CancelSaveOnFail);
+
+                // these values are retrieved in the notifications handler, and passed down to the client
+                HttpContext.Current.Items["PreflightFailed"] = true;
+                HttpContext.Current.Items["PreflightCancelSaveOnFail"] = cancelSaveOnFail;
+                HttpContext.Current.Items["PreflightNodeId"] = content.Id;
+                HttpContext.Current.Items["PreflightCulture"] = culture;
+
+                if (e.CanCancel && cancelSaveOnFail)
+                {
+                    e.CancelOperation(new EventMessage("PreflightFailed", content.Id.ToString()));
+                }
             }
         }
     }

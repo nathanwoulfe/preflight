@@ -5,7 +5,7 @@
             <h3 class="bold">Preflight</h3>
             <p>Preflight is a pluggable framework for adding pre-publishing checks to your content.</p>
             <p>Out of the box, Preflight provides plugins for general readability (reading level, sentence length, naughty/nice words), link health and text autocorrect.</p>
-            <div class="form-horizontal" ng-if="vm.isVariant">
+            <form novalidate class="form-horizontal" ng-if="vm.isVariant">
                 <div class="umb-control-group -last">
                     <div class="control-header">
                         <label class="control-label" for="culture">Culture</label>
@@ -16,7 +16,7 @@
                         </select>
                     </div>
                 </div>
-            </div>
+            </form>
         </umb-box-content>
     </umb-box>
     
@@ -24,7 +24,7 @@
         No settings exist for culture: {{ vm.currentVariant.name }}. The settings displayed are copied from the default culture, but will be saved as {{ vm.currentVariant.name }}.
     </div>
 
-    <div class="form-horizontal" ng-if="!vm.error && vm.tabs">
+    <form novalidate class="form-horizontal" ng-if="!vm.error && vm.tabs">
         <div class="umb-expansion-panel" ng-repeat="tab in vm.tabs">
             <div class="umb-expansion-panel__header" ng-click="tab.open = !tab.open">
                 <div>{{ ::tab.name }} <span ng-if="tab.summary">{{ ' - ' + tab.summary }}</span></div>
@@ -42,7 +42,7 @@
         <button role="button" class="btn btn-success" ng-click="vm.saveSettings()" ng-if="vm.tabs">
             <localize key="preflight_saveSettings">Save settings</localize>
         </button>
-    </div>
+    </form>
     
     <umb-load-indicator ng-if="vm.loading"></umb-load-indicator>
 </div>

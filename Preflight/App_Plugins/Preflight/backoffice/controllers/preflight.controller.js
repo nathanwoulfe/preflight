@@ -2,9 +2,16 @@
 
     function ctrl($scope, $rootScope, $element, $timeout, editorState, preflightService, preflightHub) {
 
-        const dirtyHashes = {};
-        const validPropTypes = Umbraco.Sys.ServerVariables.Preflight.PropertyTypesToCheck;
+        let activeVariant = editorState.current.variants.find(x => x.active);
+        const currentId = editorState.current.id;
+        const currentCulture = activeVariant.language ? activeVariant.language.culture : Umbraco.Sys.ServerVariables.Preflight.defaultCulture;
+
+        let suppressDirtyCheck;
+
+        let validPropTypes = [];
+        let dirtyHashes = {};
         let propsBeingChecked = [];
+        let propertiesToTrack = [];
         let dirtyProps = [];
 
         this.results = {
@@ -16,8 +23,67 @@
         this.progressStep = 0;
 
         $scope.model.badge = {
-            type: 'info'
+            type: 'info',
         };
+
+        $scope.$on('$destroy', () => {
+            preflightHub.stopHub();
+            showPreflight();
+            appTabChange();
+             
+            $scope.model.badge = {
+                type: 'info',
+            };
+        });
+
+        this.retest = () => {
+            this.done = false;
+            this.results = {
+                properties: []
+            };
+            this.percentageFailed = 0;
+
+            setBadgeCount(true);
+
+            preflightService.check(currentId, currentCulture)
+                .then(resp => validateCheckResponse(resp));
+        } 
+
+
+        /*
+         * 
+         */
+        const appTabChange = $rootScope.$on('app.tabChange', (e, data) => {
+            if (data.alias === 'preflight') {
+                // collapse open nc controls, timeouts prevent $apply errors
+                for (let openNc of document.querySelectorAll('.umb-nested-content__item--active .umb-nested-content__header-bar')) {
+                    $timeout(() => openNc.click());
+                }
+
+                if (!suppressDirtyCheck) {
+                    $timeout(() => {
+                        checkDirty();
+                        setBadgeCount();
+                    });
+                }
+            }
+        });
+
+
+        /*
+         * 
+         */
+        const showPreflight = $rootScope.$on('showPreflight', (event, data) => {
+            if (data.nodeId === currentId) {
+                // needs to find app closest to current scope
+                const appLink = $element.closest('form').find('[data-element="sub-view-preflight"]');
+
+                if (appLink) {
+                    suppressDirtyCheck = true;
+                    appLink.click();
+                }
+            }
+        });         
 
 
         /**
@@ -54,7 +120,7 @@
          * @param {any} alias
          */
         const getProperty = alias => {
-            for (let tab of editorState.current.variants.find(x => x.active).tabs) {
+            for (let tab of activeVariant.tabs) {
                 for (let prop of tab.properties) {
                     if (prop.alias === alias) {
                         return prop;
@@ -67,12 +133,15 @@
         /**
          * 
          */
-        const onComplete = () => { 
+        const onComplete = () => {
 
             // it's possible no tests ran, in which case results won't exist
             this.noTests = this.results.properties.every(x => !x.plugins.length);
             if (this.noTests) {
-                $scope.model.badge = undefined;
+                $scope.model.badge = {
+                    type: 'warning'
+                };
+                return;
             }
 
             // if no tests and a message has been return, show an alert icon
@@ -90,6 +159,7 @@
             this.done = true;
         };
 
+
         /**
          * Is the editor param Umbraco.Grid or Umbraco.NestedContent?
          * @param {any} editor
@@ -101,29 +171,25 @@
          * Updates the badge in the header with the number of failed tests
          */
         const setBadgeCount = pending => {
-            if (pending) {
-                $scope.model.badge = {
-                    type: 'warning'
-                };
-                return;
+            let badgeType = '';
+            let failedCount = this.results.failedCount;
+            let length = this.results.properties.length;
+
+            if (pending || this.noTests) {
+                badgeType = 'warning';
+            }
+            else if (!length && this.message) {
+                this.disabled = true;
+                badgeType = 'danger icon-';
+            }
+            else if (failedCount > 0) {
+                $scope.model.badge.count = failedCount;
+                badgeType = 'alert';
+            } else if (length && failedCount === 0) {
+                badgeType = 'success icon-';
             }
 
-            // if no tests and a message has been return, show an alert icon
-            if (!this.results.properties.length && this.message) {
-                $scope.model.badge = {
-                    type: 'danger icon-'
-                };
-            }
-            else if (this.results && this.results.failedCount > 0) {
-                $scope.model.badge = {
-                    count: this.results.failedCount,
-                    type: 'alert'
-                };
-            } else {
-                $scope.model.badge = {
-                    type: 'success icon-'
-                };
-            }
+            $scope.model.badge.type = badgeType;
         };
 
 
@@ -141,7 +207,7 @@
                 existingProp = Object.assign(existingProp, data);
                 existingProp.loading = false;
                 newProp = false;
-            }            
+            }
 
             // a new property will have a temporary placeholder - remove it
             // _temp ensures grid with multiple editors only removes the correct temp entry
@@ -153,17 +219,18 @@
                 this.results.properties.push(data);
             }
 
-            this.results.properties = this.results.properties.filter(x => x.remove === false);
-            this.results.properties = this.results.properties.filter(x => x.failedCount > -1);
+            this.results.properties = this.results.properties.filter(x => x.remove === false || x.failedCount > -1);
 
             this.results.failedCount = this.results.properties.reduce((prev, cur) => {
                 totalTestsRun += cur.totalTests;
                 return prev + cur.failedCount;
             }, 0);
 
-            this.results.failed = this.results.failedCount > 0;            
+            this.results.failed = this.results.failedCount > 0;
             this.propsBeingCheckedStr = joinList(propsBeingChecked.splice(propsBeingChecked.indexOf(data.name), 1));
             this.percentageFailed = (totalTestsRun - this.results.failedCount) / totalTestsRun * 100;
+
+            this.noTests = totalTestsRun === 0;
         };
 
 
@@ -172,6 +239,9 @@
          * Also generates and stores a hash of the property value for comparison on subsequent calls, to prevent re-fetching unchanged data
          */
         const checkDirty = () => {
+
+            if (this.disabled)
+                return;
 
             dirtyProps = [];
             let hasDirty = false;
@@ -226,12 +296,12 @@
 
                     const payload = {
                         properties: dirtyProps,
-                        nodeId: editorState.current.id,
-                        culture: editorState.current.variants.find(x => x.active).culture
+                        nodeId: currentId,
+                        culture: currentCulture
                     };
 
                     setBadgeCount(true);
-                    this.done = false;
+                    this.done = false;                    
 
                     preflightService.checkDirty(payload);
                 });
@@ -239,104 +309,80 @@
         };
 
 
-        /*
-         * 
-         */
-        $rootScope.$on('app.tabChange', (e, data) => {
-            if (data.alias === 'preflight') {
-                // collapse open nc controls, timeouts prevent $apply errors
-                for (let openNc of document.querySelectorAll('.umb-nested-content__item--active .umb-nested-content__header-bar')) {
-                    $timeout(() => openNc.click());
-                }
-
-                $timeout(() => {
-                    checkDirty();
-                    setBadgeCount();
-                });
-            }
-        });
-
-
-        /*
-         * 
-         */
-        $rootScope.$on('showPreflight', (event, data) => {
-            if (data.nodeId === $scope.content.id) {
-                // needs to find app closest to current scope
-                const appLink = $element.closest('form').find('[data-element="sub-view-preflight"]');
-
-                if (appLink) {
-                    appLink.click();
-                }
-            }
-        });
-
         /**
          * Manage cases where the check fails - ie settings do not exist for the current variant 
          * @param {any} data
          */
         const validateCheckResponse = data => {
             if (data.message && data.status === 200) {
-                this.message = data.message;                
+                this.message = data.message;
             }
         };
+
 
         /**
          * Initiates the signalr hub for returning test results
          */
-        const initSignarlR = () => {
-             
+        const startHub = () => {
             preflightHub.initHub(hub => {
 
                 hub.on('preflightTest',
                     e => {
-                        rebindResult(e);
-                        setBadgeCount();
+                        if (e.culture === currentCulture) {
+                            rebindResult(e);
+                            setBadgeCount();
+                            this.done = false;
+                        }
                     });
 
-                hub.on('preflightComplete',
-                    () => onComplete()
-                );
-
-                hub.start(e => {
-                    /**
-                     * Check all properties when the controller loads. Won't re-run when changing between apps
-                     * but needs to happen after the hub loads
-                     */
-                    $timeout(() => {
-                        setBadgeCount(true);
-                        checkDirty(); // builds initial hash array, but won't run anything
-                        preflightService.check(editorState.current.id, editorState.current.variants.find(x => x.active).language.culture)
-                            .then(resp => validateCheckResponse(resp));
-                    });
-                });
+                hub.on('preflightComplete', () => onComplete());
+                
+                hub.start(() => doInitialPreflight());
             });
         };
+
+
+        /**
+        * Check all properties when the controller loads. Won't re-run when changing between apps
+        * but needs to happen after the hub loads or on any variant change (tracked by route update)
+        */
+        const doInitialPreflight = () => {
+            $timeout(() => {
+                setBadgeCount(true);
+                checkDirty(); // builds initial hash array, but won't run anything
+
+                preflightService.check(currentId, currentCulture)
+                    .then(resp => validateCheckResponse(resp));
+            });
+        }
+
 
         /**
          * Stores a reference collection of tracked properties
          */
-        const activeVariant = editorState.current.variants.find(x => x.active);
-        let propertiesToTrack = [];
-
-        if (activeVariant) {
-            activeVariant.tabs.forEach(x => {
-                propertiesToTrack = propertiesToTrack.concat(x.properties.map(x => {
-                    if (validPropTypes.includes(x.editor)) {
-                        return {
-                            editor: x.editor,
-                            alias: x.alias,
-                            label: x.label
-                        };
-                    }
-                })).filter(x => x);
-            });
-
-            // array will have length, as app is only sent on types with testable properties
-            if (propertiesToTrack.length) {
-                initSignarlR();
+        const collectProperties = () => {
+            if (activeVariant) {
+                activeVariant.tabs.forEach(x => {
+                    propertiesToTrack = propertiesToTrack.concat(x.properties.map(x => {
+                        if (validPropTypes.includes(x.editor)) {
+                            return {
+                                editor: x.editor,
+                                alias: x.alias,
+                                label: x.label
+                            };
+                        }
+                    })).filter(x => x);
+                });
+                startHub();
             }
         }
+
+        // find out what to actually test - no point watch lots of properties if they're excluded from testing...
+        preflightService.getPropertiesForCurrent(currentCulture, editorState.current.contentTypeAlias)
+            .then(resp => {
+                validPropTypes = resp.properties || [];
+                collectProperties();
+            });
     }
 
     angular.module('preflight').controller('preflight.controller', ['$scope', '$rootScope', '$element', '$timeout', 'editorState', 'preflightService', 'preflightHub', ctrl]);

@@ -2,7 +2,7 @@
      
     function preflightService($http, umbRequestHelper) { 
 
-        const urlBase = Umbraco.Sys.ServerVariables.Preflight.ApiPath;
+        const urlBase = Umbraco.Sys.ServerVariables.Preflight.apiPath;
 
         const helpText = `
             <p>If your content is too difficult for your visitors to read, you're all going to have a bad time.</p>
@@ -21,20 +21,28 @@
             );
          
         const service = {
-            check: (id, culture) => request('GET', `${urlBase}check/${id}/${culture || 'default'}`),            
+            check: (id, culture) => 
+                request('GET', `${urlBase}check/${id}/${culture || 'default'}`),
 
-            checkDirty: data => request('POST', `${urlBase}checkdirty/`, data),            
+            checkDirty: data => 
+                request('POST', `${urlBase}checkdirty/`, data),
 
-            getSettings: (culture, fallback) => request('GET', `${urlBase}getSettings/1/${culture || 'default'}/${fallback}`),            
+            getPropertiesForCurrent: (culture, alias) => 
+                request('GET', `${urlBase}getPropertiesForCurrent/1/${culture}/${alias}`),
 
-            getSettingValue: (culture, alias) => request('GET', `${urlBase}getSettingValue/${alias}/${culture || 'default'}`),
+            getSettings: (culture, fallback) => 
+                request('GET', `${urlBase}getSettings/1/${culture || 'default'}/${fallback}`),
 
-            saveSettings: (settings, tabs, culture, message = '') => request('POST', `${urlBase}saveSettings`, {
-                settings, 
-                tabs,
-                culture,
-                message
-            }),
+            getSettingValue: (culture, alias) => 
+                request('GET', `${urlBase}getSettingValue/${alias}/${culture || 'default'}`),
+
+            saveSettings: (settings, tabs, culture, message = '') => 
+                request('POST', `${urlBase}saveSettings`, {
+                    settings, 
+                    tabs,
+                    culture,
+                    message
+                }),            
 
             getHelpText: () => helpText
         };
