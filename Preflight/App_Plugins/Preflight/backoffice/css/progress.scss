@@ -1,0 +1,56 @@
+.preflight-progress {
+    margin: 15px auto 30px;
+
+    .umb-progress-circle__highlight {
+        transition: stroke-dasharray ease-in-out 500ms;
+    }
+
+    .umb-progress-circle__percentage {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding-top: 10%;
+
+        small {
+            font-size: 12px;
+        }
+    }
+
+    .umb-progress-circle__view-box {
+        &:after {
+            content: "";
+            display: block;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 3px solid #CBA82C;
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            animation: preflight-pulse 2s ease 0s infinite;
+        }
+    }
+}
+
+@keyframes preflight-pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    80% {
+        opacity: 0;
+        transform: scale(2);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(3);
+    }
+}

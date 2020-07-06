@@ -1,0 +1,26 @@
+preflight-state-icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    .state-icon {
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 15px;
+        width: 30px;
+        height: 30px;
+        min-width: 30px;
+        border-radius: 50%;
+    }
+
+    .icon {
+        font-size: 22px;
+        color: #fff;
+    }
+
+    + .preflight-result {
+        padding-left: 77px;
+    }
+}    

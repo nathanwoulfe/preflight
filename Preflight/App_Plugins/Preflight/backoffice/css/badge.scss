@@ -1,0 +1,55 @@
+
+[data-element="sub-view-preflight"] .badge {
+    transition: background-color ease-in-out .5s;
+
+    &.-type-success {
+        background-color: $green;
+
+        &::before {
+            transform: translateY(-2px);
+            content: '\e165';
+        }
+    }
+
+    &.-type-danger {
+        background-color:$red;
+
+        &::before {
+            transform: translateY(-2px);
+            content: '\e1a4';
+        }
+    }
+}
+
+.preflight {
+    .count-badge {
+        color: #fff;
+        background-color: $red;
+        border: 2px solid #fff;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: bold;
+        padding: 2px;
+        line-height: 16px;
+        position: absolute;
+        text-align: center;
+        min-width: 16px;
+        transform: translate(-110%, -60%);
+
+        &.pass {
+            background-color: $green;
+
+            ins::before {
+                content: '\e165';
+            }
+        }
+
+        &.pending {
+            background-color: $orange;
+
+            ins::before {
+                content: '';
+            }
+        }
+    }
+}

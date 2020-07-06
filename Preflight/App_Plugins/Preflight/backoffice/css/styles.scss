@@ -7,52 +7,10 @@ $grey: #f3f3f5;
 $umbGreen: #00aea2;
 $umbBlue: #1b264f;
 
-[data-element="sub-view-preflight"] .badge {
-    transition: background-color ease-in-out .5s;
-
-    &.-type-success {
-        background-color: $green;
-
-        &::before {
-            transform: translateY(-2px);
-            content: '\e165';
-        }
-    }
-
-    &.-type-danger {
-        background-color:$red;
-
-        &::before {
-            transform: translateY(-2px);
-            content: '\e1a4';
-        }
-    }
-}
-
-.preflight-progress {
-    margin: 15px auto 30px;
-
-    .umb-progress-circle__highlight {
-        transition: stroke-dasharray ease-in-out 500ms;
-    }
-
-    .umb-progress-circle__percentage {
-        position:absolute;
-        top:0;
-        right:0;
-        bottom:0;
-        left:0;
-        display:flex;
-        justify-content:center;
-        align-items:center;
-        flex-direction:column;
-        padding-top:10%;
-
-        small {
-            font-size:12px;
-        }
-    }
-}
+@import "progress";
+@import "badge";
+@import "state-icon";
+@import "cards";
 
 .pf-disabled {
     cursor:not-allowed!important;
@@ -68,9 +26,18 @@ $umbBlue: #1b264f;
 
     &-settings {
         overflow: hidden;
-
+ 
         .umb-control-group {
             position: relative;
+
+            &.-last {
+                display: flex;
+                align-items: center;
+
+                select {
+                    margin-bottom:0;
+                }
+            }
         }
     }
 
@@ -99,63 +66,7 @@ $umbBlue: #1b264f;
         margin-top: 0;
     }
 
-    preflight-state-icon {
-        position: absolute;
-        top: 0;
-        left: 0;
 
-        .state-icon {
-            padding: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 15px;
-            width: 30px;
-            height: 30px;
-            min-width: 30px;
-            border-radius: 50%;
-        }
-
-        .icon {
-            font-size: 22px;
-            color: #fff;
-        }
-
-        + .preflight-result {
-            padding-left: 77px;
-        }
-    }
-
-    .count-badge {
-        color: #fff;
-        background-color: $red;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        font-size: 10px;
-        font-weight: bold;
-        padding: 2px;
-        line-height: 16px;
-        position: absolute;
-        text-align: center;
-        min-width: 16px;
-        transform: translate(-110%, -60%);
-
-        &.pass {
-            background-color: $green;
-
-            ins::before {
-                content: '\e165';
-            }
-        }
-
-        &.pending {
-            background-color: $orange;
-
-            ins::before {
-                content: '';
-            }
-        }
-    }
 
     .broken-link-type {
         color: $orange;
@@ -212,39 +123,6 @@ $umbBlue: #1b264f;
 
     &-plugin-wrapper {
         width: 100%;
-    }
-
-    &-cards {
-        display: flex;
-        justify-content: center;
-        text-align: center;
-        padding: 10px;
-        margin: 0 -10px;
-    }
-
-    .card {
-        display: flex;
-        flex-direction: column;
-        padding: 20px;
-        border-radius: 6px;
-        border-width: 2px;
-        border-style: solid;
-        background: rgba($grey, 0.75) !important;
-        margin: 0 10px;
-
-        &.pass {
-            border-color: $green;
-        }
-
-        &.fail {
-            border-color: $red;
-        }
-
-        &-score {
-            font-size: 36px;
-            line-height: 1;
-            margin-bottom: 10px;
-        }
     }
 
     .disabled {
