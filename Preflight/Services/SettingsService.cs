@@ -63,16 +63,23 @@ namespace Preflight.Services
             return default;
         }
 
+        /// <summary>
+        /// Get the testable properties for the current culture, from the relevant settings file
+        /// Avoids watching unnecessary editors on the client side
+        /// </summary>
+        /// <param name="culture"></param>
+        /// <param name="alias"></param>
+        /// <returns></returns>
         public List<string> GetPropertiesForCurrent(string culture, string alias)
         {
             var settings = GetSettings(culture, false).Settings;
-            var documentTypesToTest = settings.GetValue<string>(KnownSettings.DocumentTypesToTest);
+            var documentTypesToTest = settings.GetValue(KnownSettings.DocumentTypesToTest);
 
             // if current alias is not listed in types to test, do nothing
             if (documentTypesToTest.HasValue() && !documentTypesToTest.Contains(alias) || settings.GetValue<bool>(KnownSettings.DisableAllTests))
                 return new List<string>();
 
-            return settings.GetValue<string>(KnownSettings.PropertiesToTest)?.Split(',').ToList() ?? default;
+            return settings.GetValue(KnownSettings.PropertiesToTest)?.Split(',').ToList() ?? default;
         }
 
         /// <summary>

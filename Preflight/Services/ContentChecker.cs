@@ -150,7 +150,12 @@ namespace Preflight.Services
 
             foreach (Property prop in props)
             {
-                string propValue = prop.GetValue(culture)?.ToString();
+                // don't use GetValue<T>() => extract the correct culture from the values collection
+                var rawPropertyValue = prop.Values.First(x => x.Culture == culture || x.Culture == null);
+
+                // check published first, then fall back to unpublished
+                string propValue = rawPropertyValue.PublishedValue?.ToString();
+                propValue = propValue ?? rawPropertyValue.EditedValue?.ToString();
 
                 // only continue if the prop has a value
                 if (!propValue.HasValue())

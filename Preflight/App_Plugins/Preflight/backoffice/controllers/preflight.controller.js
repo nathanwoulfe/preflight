@@ -186,6 +186,7 @@
                 $scope.model.badge.count = failedCount;
                 badgeType = 'alert';
             } else if (length && failedCount === 0) {
+                $scope.model.badge.count = null;
                 badgeType = 'success icon-';
             }
 
@@ -350,7 +351,6 @@
             $timeout(() => {
                 setBadgeCount(true);
                 checkDirty(); // builds initial hash array, but won't run anything
-
                 preflightService.check(currentId, currentCulture)
                     .then(resp => validateCheckResponse(resp));
             });
@@ -373,6 +373,7 @@
                         }
                     })).filter(x => x);
                 });
+
                 startHub();
             }
         }

@@ -12,6 +12,11 @@ namespace Preflight.Extensions
             return settings.Any(s => s.Alias == name.Camel() && ReferenceEquals(s.Value, value));
         }
 
+        public static string GetValue(this IEnumerable<SettingsModel> settings, string name)
+        {
+            return settings.GetValue<string>(name);
+        }
+
         public static T GetValue<T>(this IEnumerable<SettingsModel> settings, string name) where T : IConvertible
         {
             object value = settings.FirstOrDefault(s => s.Alias == name.Camel())?.Value;
