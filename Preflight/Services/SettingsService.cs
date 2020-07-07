@@ -77,9 +77,9 @@ namespace Preflight.Services
 
             // if current alias is not listed in types to test, do nothing
             if (documentTypesToTest.HasValue() && !documentTypesToTest.Contains(alias) || settings.GetValue<bool>(KnownSettings.DisableAllTests))
-                return new List<string>();
+                return default;
 
-            return settings.GetValue(KnownSettings.PropertiesToTest)?.Split(',').ToList() ?? default;
+            return settings.GetValue(KnownSettings.PropertiesToTest).Split(',').ToList() ?? default;
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Preflight.Services
             }
             catch (Exception ex)
             {
-                _logger.Error<SettingsService>(ex, "$Could not save Preflight settings for culture: {culture}");
+                _logger.Error<SettingsService>(ex, "Could not save Preflight settings for culture: {culture}");
                 return false;
             }
         }

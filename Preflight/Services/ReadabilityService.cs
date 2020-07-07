@@ -37,8 +37,8 @@ namespace Preflight.Services
             var readabilityMin = settings.GetValue<int>(KnownSettings.ReadabilityMin);
             var readabilityMax = settings.GetValue<int>(KnownSettings.ReadabilityMax);
 
-            string[] whitelist = settings.GetValue<string>(KnownSettings.NiceList).Split(',');
-            string[] blacklist = settings.GetValue<string>(KnownSettings.NaughtyList).Split(',');
+            string[] whitelist = settings.GetValue(KnownSettings.NiceList).Split(',');
+            string[] blacklist = settings.GetValue(KnownSettings.NaughtyList).Split(',');
 
             List<string> longWords = new List<string>();
             List<string> blacklisted = new List<string>();

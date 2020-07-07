@@ -56,7 +56,7 @@ namespace Preflight.Plugins
         /// <param name="settings"></param>
         public void Check(int id, string val, List<SettingsModel> settings)
         {
-            Dictionary<string, string> autocorrect = settings.GetValue<string>(KnownSettings.AutocorrectTerms)?.Split(',')
+            Dictionary<string, string> autocorrect = settings.GetValue(KnownSettings.AutocorrectTerms).Split(',')
                 .ToDictionary(
                     s => s.Split('|')[0],
                     s => s.Split('|')[1]

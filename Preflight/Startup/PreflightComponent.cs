@@ -152,7 +152,7 @@ namespace Preflight.Startup
                     continue;
 
                 // only check if current user group is opted in to testing on save
-                var groupSetting = settings.GetValue<string>(KnownSettings.UserGroupOptIn);
+                var groupSetting = settings.GetValue(KnownSettings.UserGroupOptIn);
                 if (groupSetting != null)
                 {
                     var currentUserGroups = Umbraco.Web.Composing.Current.UmbracoContext.Security.CurrentUser?.Groups?.Select(x => x.Name) ?? new List<string>();

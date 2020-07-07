@@ -66,7 +66,7 @@ namespace Preflight.Plugins
 
         public void Check(int id, string val, List<SettingsModel> settings)
         {
-            var apiKey = settings.GetValue<string>(KnownSettings.GoogleApiKey);
+            var apiKey = settings.GetValue(KnownSettings.GoogleApiKey);
             var checkSafeBrowsing = settings.GetValue<bool>(KnownSettings.EnsureSafeLinks);
 
             // check safebrowsing first to avoid double processing of links

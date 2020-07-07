@@ -60,7 +60,7 @@ namespace Preflight.Services
             if (settings.Settings != null && settings.Settings.Any())
             {
                 _settings = settings.Settings;
-                _testableProperties = _settings.GetValue<string>(KnownSettings.PropertiesToTest);
+                _testableProperties = _settings.GetValue(KnownSettings.PropertiesToTest);
             } else
             {
                 return settings.Message;
