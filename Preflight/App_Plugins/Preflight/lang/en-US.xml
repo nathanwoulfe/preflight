@@ -25,6 +25,11 @@
 
     <key alias="presaveIntro">This page is being run through preflight tests to ensure content quality</key>
     <key alias="presaveText">This may take a few seconds to process</key>
+
+    <key alias="selectCulture">Select culture</key>
+    <key alias="noSettings">No settings exist for culture: %0%. The settings displayed are copied from the default culture, but will be saved as %0%.</key>
+    <key alias="settingsIntro">Preflight is a pluggable framework for adding pre-publishing checks to your content.</key>
+    <key alias="settingsSubIntro">Out of the box, Preflight provides plugins for general readability (reading level, sentence length, naughty/nice words), link health and text autocorrect.</key>
   </area>
 
   <area alias="preflightLinkHealth">

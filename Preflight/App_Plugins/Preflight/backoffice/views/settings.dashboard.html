@@ -3,12 +3,14 @@
     <umb-box>
         <umb-box-content>
             <h3 class="bold">Preflight</h3>
-            <p>Preflight is a pluggable framework for adding pre-publishing checks to your content.</p>
-            <p>Out of the box, Preflight provides plugins for general readability (reading level, sentence length, naughty/nice words), link health and text autocorrect.</p>
+            <p><localize key="preflight_settingsIntro">Preflight is a pluggable framework for adding pre-publishing checks to your content.</localize></p>
+            <p><localize key="preflight_settingsSubIntro">Out of the box, Preflight provides plugins for general readability (reading level, sentence length, naughty/nice words), link health and text autocorrect.</localize></p>
             <form novalidate class="form-horizontal" ng-if="vm.isVariant">
                 <div class="umb-control-group -last">
                     <div class="control-header">
-                        <label class="control-label" for="culture">Culture</label>
+                        <label class="control-label" for="culture">
+                            <localize key="preflight_selectCulture">Select culture</localize>
+                        </label>
                     </div>
                     <div class="controls">
                         <select ng-model="vm.currentVariant" ng-options="v as v.name for v in vm.variants" name="culture" ng-change="vm.getVariantSettings()">
@@ -20,8 +22,8 @@
         </umb-box-content>
     </umb-box>
     
-    <div ng-if="vm.message && !vm.loading" class="alert alert-info">
-        No settings exist for culture: {{ vm.currentVariant.name }}. The settings displayed are copied from the default culture, but will be saved as {{ vm.currentVariant.name }}.
+    <div ng-if="vm.noSettingsStr && !vm.loading" class="alert alert-info">
+        {{ vm.noSettingsStr }}      
     </div>
 
     <form novalidate class="form-horizontal" ng-if="!vm.error && vm.tabs">

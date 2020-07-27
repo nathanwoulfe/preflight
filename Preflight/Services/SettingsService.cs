@@ -48,8 +48,8 @@ namespace Preflight.Services
             culture = culture == "default" ? _defaultCulture : culture;
 
             // no caching for testing/dev
-            //if (HttpContext.Current.Request.IsLocal)
-            //    return GetSettings(culture, fallbackToDefault);
+            if (HttpContext.Current.Request.IsLocal)
+                return GetSettings(culture, fallbackToDefault);
 
             PreflightSettings fromCache = Current.AppCaches.RuntimeCache.GetCacheItem(KnownStrings.SettingsCacheKey + culture, () => GetSettings(culture, fallbackToDefault), new TimeSpan(24, 0, 0), false);
 

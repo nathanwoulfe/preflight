@@ -1,9 +1,29 @@
 ﻿(() => {
 
-    function ctrl($scope, languageResource, notificationsService, preflightService) {
+    function ctrl($scope, $q, languageResource, localizationService, notificationsService, preflightService) {
 
         this.isVariant = false;
+        this.noSettingsStr = '';
+        let noSettingsStr = '';
 
+        const promises = [languageResource.getAll(), localizationService.localize('preflight_noSettings')];
+
+        $q.all(promises)
+            .then(resp => {
+                [this.variants, noSettingsStr] = resp;
+
+                this.isVariant = this.variants.length > 1;
+
+                if (!this.isVariant) {
+                    this.currentVariant = this.variants[0];
+                    this.getVariantSettings();
+                }
+            });
+
+
+        /**
+         * 
+         * */
         const watchTestableProperties = () => {
             let propertiesToModify = this.settings.filter(x => x.alias.includes('PropertiesToTest') && x.alias !== 'propertiesToTest');
             $scope.$watch(() => this.settings.find(x => x.alias === 'propertiesToTest').value, newVal => {
@@ -16,30 +36,23 @@
                     }
                 }
             }, true);
-        }; 
+        };
 
-        languageResource.getAll()
-            .then(resp => {
-                this.isVariant = resp.length > 1;
-                this.variants = resp;
 
-                if (!this.isVariant) {
-                    this.currentVariant = this.variants[0];
-                    this.getVariantSettings();
-                }
-            });
-
+        /**
+         * 
+         * */
         this.getVariantSettings = () => {
             this.loading = true;
 
             // fallback to true will return default culture settings for saving new language
             preflightService.getSettings(this.currentVariant.culture, true)
                 .then(resp => {
-
-                    this.message = resp.data.message;
                     this.settings = resp.data.settings;
                     this.tabs = resp.data.tabs;
 
+                    this.noSettingsStr = resp.data.message ? noSettingsStr.replace(/%0%/gmi, this.currentVariant.name) : '';
+                    
                     this.settings.forEach(v => {
                         if (v.view.includes('slider')) {
                             v.config = {
@@ -55,7 +68,9 @@
                         } else if (v.view.includes('multipletextbox')) {
 
                             v.value = v.value.split(',').map(val => {
-                                return { value: val };
+                                return {
+                                    value: val
+                                };
                             }).sort((a, b) => a < b);
 
                             v.config = {
@@ -109,22 +124,21 @@
 
                 preflightService.saveSettings(settingsToSave, this.tabs, this.currentVariant.culture)
                     .then(resp => {
-                        resp.data
-                            ? notificationsService.success('SUCCESS', 'Settings updated')
-                            : notificationsService.error('ERROR', 'Unable to save settings');
+                        resp.data ?
+                            notificationsService.success('SUCCESS', 'Settings updated') :
+                            notificationsService.error('ERROR', 'Unable to save settings');
 
                         // reset dashboard form state
                         var formScope = angular.element(document.querySelector('[name="dashboardForm"]')).scope();
                         formScope.dashboardForm.$setPristine();
                     });
-            }
-            else {
+            } else {
                 notificationsService.error('ERROR',
                     'Unable to save settings - readability minimum cannot be greater than readability maximum');
             }
         };
     }
 
-    angular.module('preflight').controller('preflight.settings.controller', ['$scope', 'languageResource', 'notificationsService', 'preflightService', ctrl]);
+    angular.module('preflight').controller('preflight.settings.controller', ['$scope', '$q', 'languageResource', 'localizationService', 'notificationsService', 'preflightService', ctrl]);
 
 })();
